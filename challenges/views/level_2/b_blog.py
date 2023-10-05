@@ -9,14 +9,18 @@
 - реализовать у модели метод to_json, который будет преобразовывать объект книги в json-сериализуемый словарь
 - по очереди реализовать каждую из вьюх в этом файле, проверяя правильность их работу в браузере
 """
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
+from challenges.models import PostBlog
+
+import datetime
 
 
 def last_posts_list_view(request: HttpRequest) -> HttpResponse:
     """
     В этой вьюхе вам нужно вернуть 3 последних опубликованных поста.
     """
-    pass
+    published_posts = PostBlog.objects.filter(status='pb')[:3]
+    return HttpResponse([published_post.to_json() for published_post in published_posts])
 
 
 def posts_search_view(request: HttpRequest) -> HttpResponse:
@@ -25,14 +29,16 @@ def posts_search_view(request: HttpRequest) -> HttpResponse:
     Сам запрос возьмите из get-параметра query.
     Подходящесть поста можете определять по вхождению запроса в название или текст поста, например.
     """
-    pass
+    posts_with_query = PostBlog.objects.filter(text_post__icontains=request.GET['query'])
+    return HttpResponse([post.to_json() for post in posts_with_query])
 
 
 def untagged_posts_list_view(request: HttpRequest) -> HttpResponse:
     """
     В этой вьюхе вам нужно вернуть все посты без категории, отсортируйте их по автору и дате создания.
     """
-    pass
+    posts_without_category = PostBlog.objects.filter(category__isnull=True).order_by('author_name', 'created_at')
+    return HttpResponse([post.to_json() for post in posts_without_category])
 
 
 def categories_posts_list_view(request: HttpRequest) -> HttpResponse:
@@ -40,7 +46,9 @@ def categories_posts_list_view(request: HttpRequest) -> HttpResponse:
     В этой вьюхе вам нужно вернуть все посты все посты, категория которых принадлежит одной из указанных.
     Возьмите get-параметр categories, в нём разделённый запятой список выбранных категорий.
     """
-    pass
+    list_categories = [category for category in request.GET['categories'].split(',')]
+    posts_categories = PostBlog.objects.filter(category__in=list_categories)
+    return HttpResponse([post.to_json() for post in posts_categories])
 
 
 def last_days_posts_list_view(request: HttpRequest) -> HttpResponse:
@@ -48,4 +56,7 @@ def last_days_posts_list_view(request: HttpRequest) -> HttpResponse:
     В этой вьюхе вам нужно вернуть посты, опубликованные за последние last_days дней.
     Значение last_days возьмите из соответствующего get-параметра.
     """
-    pass
+    last_days = int(request.GET['last_days'])
+    date_for_filter = datetime.datetime.now() - datetime.timedelta(days=last_days)
+    posts = PostBlog.objects.filter(status='pb',publication_date__gte=date_for_filter)
+    return HttpResponse([post.to_json() for post in posts])

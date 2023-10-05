@@ -38,3 +38,36 @@ class Laptop(models.Model):
         }
 
         return json.dumps(data)
+    
+
+class PostBlog(models.Model):
+    class Meta:
+        get_latest_by = 'created_at'
+        ordering = ['-created_at']
+
+    MESSAGE_STATUS_CHOICES = [
+        ('pb', 'published'),
+        ('npb', 'not published'),
+        ('ban', 'banned')
+    ]
+    
+    title = models.CharField(max_length=120)
+    text_post = models.CharField(max_length=1500)
+    author_name = models.CharField(max_length=256)
+    status = models.CharField(max_length=3, choices=MESSAGE_STATUS_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    publication_date = models.DateTimeField()
+    category = models.CharField(max_length=120)
+
+    def to_json(self):
+        data = {
+            'title': self.title,
+            'text_post': self.text_post,
+            'author_name': self.author_name,
+            'status': self.status,
+            'publication_date': self.publication_date.strftime('%d-%m-%Y %H:%M:%S'),
+            'category': self.category,
+            'created_at':self.created_at.strftime('%d-%m-%Y %H:%M:%S'),
+        }
+
+        return json.dumps(data)

@@ -46,7 +46,7 @@ def categories_posts_list_view(request: HttpRequest) -> HttpResponse:
     В этой вьюхе вам нужно вернуть все посты все посты, категория которых принадлежит одной из указанных.
     Возьмите get-параметр categories, в нём разделённый запятой список выбранных категорий.
     """
-    list_categories = [category for category in request.GET['categories'].split(',')]
+    list_categories = request.GET['categories'].split(',')
     posts_categories = PostBlog.objects.filter(category__in=list_categories)
     return HttpResponse([post.to_json() for post in posts_categories])
 
@@ -56,7 +56,11 @@ def last_days_posts_list_view(request: HttpRequest) -> HttpResponse:
     В этой вьюхе вам нужно вернуть посты, опубликованные за последние last_days дней.
     Значение last_days возьмите из соответствующего get-параметра.
     """
-    last_days = int(request.GET['last_days'])
+    try:
+        last_days = int(request.GET['last_days'])
+    except (ValueError, KeyError):
+        return HttpResponse(status=404)
+
     date_for_filter = datetime.datetime.now() - datetime.timedelta(days=last_days)
     posts = PostBlog.objects.filter(status='pb',publication_date__gte=date_for_filter)
     return HttpResponse([post.to_json() for post in posts])

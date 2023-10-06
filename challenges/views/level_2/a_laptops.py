@@ -32,7 +32,7 @@ def laptop_in_stock_list_view(request: HttpRequest) -> HttpResponse:
     В этой вьюхе вам нужно вернуть json-описание всех ноутбуков, которых на складе больше нуля.
     Отсортируйте ноутбуки по дате добавления, сначала самый новый.
     """
-    all_laptops = Laptop.objects.filter(quantity_in_stock__gte=0).order_by('created_at')
+    all_laptops = Laptop.objects.filter(quantity_in_stock__gt=0).order_by('created_at')
     return HttpResponse([product.to_json() for product in all_laptops])
 
 
@@ -43,16 +43,11 @@ def laptop_filter_view(request: HttpRequest) -> HttpResponse:
     Если бренд не входит в список доступных у вас на сайте или если цена отрицательная, верните 403.
     Отсортируйте ноутбуки по цене, сначала самый дешевый.
     """
-    data = request.GET
-    brand = data['brand']
-    min_price = data['min_price']
+    brand = request.GET['brand']
+    min_price = request.GET['min_price']
     
-    laptops = Laptop.objects.all()
-    all_brands = set()
-    for laptop in laptops:
-        all_brands.add(laptop.brand)
-    
-    if brand in all_brands and int(min_price) > 0:
+    laptops_count = Laptop.objects.filter(brand=brand).count()
+    if laptops_count > 0:
         laptops = Laptop.objects.filter(price__gte=min_price, brand=brand).order_by('price')
         return HttpResponse([laptop.to_json() for laptop in laptops])
     else:

@@ -47,7 +47,7 @@ def laptop_filter_view(request: HttpRequest) -> HttpResponse:
     min_price = request.GET['min_price']
     
     laptops_count = Laptop.objects.filter(brand=brand).count()
-    if laptops_count > 0:
+    if laptops_count:
         laptops = Laptop.objects.filter(price__gte=min_price, brand=brand).order_by('price')
         return HttpResponse([laptop.to_json() for laptop in laptops])
     else:
